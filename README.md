@@ -18,6 +18,7 @@ pip install -r requirements.txt
 4. Configure o seu Token do Bot
 ## 🔑 Configurando o Token do Bot
 4.1 Crie seu bot com o [BotFather](https://t.me/botfather) no Telegram:
-   - Envie o comando `/newbot`
+   - Busque por @BotFather  
+   - Inicie uma conversa com o comando `/newbot`
    - Siga as instruções e ao final você receberá um `TOKEN`
 4.2 Substitua o valor da variável: TOKEN=token recebido pelo botfather
