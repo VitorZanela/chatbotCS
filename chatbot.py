@@ -6,9 +6,6 @@ import os
 load_dotenv()
 TOKEN = os.environ.get("TOKEN")
 
-TOKEN = ''
-
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("Notícias", callback_data='noticias')],
