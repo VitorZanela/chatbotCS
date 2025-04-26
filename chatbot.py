@@ -18,7 +18,7 @@ async def mensagem_invalida(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(
             "🚫 *Mensagem não reconhecida*🚫\n\n"
-            "Use o menu para acessar as opções de\n*Início* e *Informações sobre bot*.\n"
+            "Use o menu para acessar as opções de\n*Início* e *Informações sobre o bot*.\n"
             "Ou, se preferir, digite /start para iniciar",
             parse_mode="Markdown",
             reply_markup=gerar_menu()
