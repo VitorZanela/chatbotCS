@@ -9,7 +9,7 @@ TOKEN = os.environ.get("TOKEN")
 async def mensagem_invalida(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🚫 *Mensagem não reconhecida*🚫\n\n"
-        "Use o menu para acessar as opções de *Início* e *Informações do Bot*.\n"
+        "Use o menu para acessar as opções de *Início* e *Informações do bot*.\n"
         "Ou, se preferir, digite /start para iniciar",
         parse_mode="Markdown"
     )
