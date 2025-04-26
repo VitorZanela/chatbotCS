@@ -38,6 +38,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("Campeonatos", callback_data='campeonatos'),
             InlineKeyboardButton("Curiosidades", callback_data='curiosidades')
         ],
+        [InlineKeyboardButton("Contatos FURIA", callback_data='contato')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(welcome_message, reply_markup=reply_markup)
@@ -51,8 +52,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'noticias': " Últimas notícias: Novo patch do CS2 anunciado!",
         'dicas': " Dica: Use o som ao seu favor. Escute os passos e saiba a posição dos inimigos!",
         'campeonatos': " Próximo major: IEM Cologne - Julho 2025",
-        'curiosidades': " Curiosidade: O mapa Dust2 existe desde 2001!"
+        'curiosidades': " Curiosidade: O mapa Dust2 existe desde 2001!",
+        'contato': "- Entre em contato com a FURIA pelo WhatsApp: [Contato Inteligente FURIA](https://wa.me/5511993404466)\n\n- Ou fique à vontade para seguir a FURIA no [Instagram](https://www.instagram.com/furiagg)"
     }
+
+    await query.edit_message_text(
+    text=resposta.get(query.data, "Opção inválida."),
+    parse_mode="Markdown",
+    disable_web_page_preview=True
+)
 
 async def sair(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
