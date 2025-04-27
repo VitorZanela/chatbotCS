@@ -25,7 +25,7 @@ async def mensagem_invalida(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(
             "🚫 *Mensagem não reconhecida!* 🚫\n\n"
-            "Não se preocupe 🙌\n"
+            "Não se preocupe 🙌\n "
             "Você será redirecionado para o *menu principal*.",
             parse_mode="Markdown"
         )
