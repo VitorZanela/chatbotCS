@@ -13,16 +13,23 @@ async def mensagem_invalida(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await mostrar_menu_principal(update, context)
     elif text == "🚪 Sair":
         await sair(update, context)
-    elif text == "Reiniciar":
+    elif text == "♻️ Reiniciar":
         await start(update, context)
-    else:
+    elif text == "ℹ️ Mais info sobre o Bot":
         await update.message.reply_text(
-            "🚫 *Mensagem não reconhecida*🚫\n\n"
-            "Use o menu para acessar as opções de\n*Início* e *Informações sobre o bot*.\n"
-            "Ou, se preferir, digite /start para iniciar",
+            "ℹ️ *Informações sobre o Bot* ℹ️\n\n"
+            "Este bot fornece notícias, rankings, torneios e curiosidades sobre o time de CS:GO da FURIA! 🐺",
             parse_mode="Markdown",
             reply_markup=gerar_menu()
         )
+    else:
+        await update.message.reply_text(
+            "🚫 *Mensagem não reconhecida!* 🚫\n\n"
+            "Não se preocupe 🙌\n"
+            "Você será redirecionado para o *menu principal*.",
+            parse_mode="Markdown"
+        )
+        await mostrar_menu_principal(update, context)
 
 async def set_menu(app):
     commands = [
@@ -42,29 +49,35 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await mostrar_menu_principal(update, context)
 
 async def mostrar_menu_principal(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     keyboard = [
         [
             InlineKeyboardButton("Notícias", callback_data='noticias'),
-            InlineKeyboardButton("Dicas", callback_data='dicas')
+            InlineKeyboardButton("Ranking", callback_data='ranking')
         ],
         [
-            InlineKeyboardButton("Campeonatos", callback_data='campeonatos'),
-            InlineKeyboardButton("Curiosidades", callback_data='curiosidades')
+            InlineKeyboardButton("Torneios", callback_data='torneios'),
+            InlineKeyboardButton("Forúm CS:GO", callback_data='forum')
         ],
         [InlineKeyboardButton("Contatos FURIA", callback_data='contato')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(
-        "Escolha uma opção no menu abaixo:", 
-        reply_markup=reply_markup
-    )
+
+    if update.message:  # Se for mensagem normal
+        await update.message.reply_text(
+            "Escolha uma opção no menu abaixo:",
+            reply_markup=reply_markup
+        )
+    elif update.callback_query:  # Se for botão (CallbackQuery)
+        await update.callback_query.edit_message_text(
+            "Escolha uma opção no menu abaixo:",
+            reply_markup=reply_markup
+        )
 
 def gerar_menu():
     keyboard = [
         ["📋 Menu Principal"],
-        ["Reiniciar", "🚪 Sair"],
-        ["Mais info sobre o Bot"]
+        ["♻️ Reiniciar", "🚪 Sair"],
+        ["ℹ️ Mais info sobre o Bot"]
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
@@ -72,19 +85,102 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    resposta = {
-        'noticias': " Últimas notícias: Novo patch do CS2 anunciado!",
-        'dicas': " Dica: Use o som ao seu favor. Escute os passos e saiba a posição dos inimigos!",
-        'campeonatos': " Próximo major: IEM Cologne - Julho 2025",
-        'curiosidades': " Curiosidade: O mapa Dust2 existe desde 2001!",
-        'contato': "- Entre em contato com a FURIA pelo WhatsApp: [Contato Inteligente FURIA](https://wa.me/5511993404466)\n\n- Ou fique à vontade para seguir a FURIA no [Instagram](https://www.instagram.com/furiagg)"
-    }
+    if query.data == 'noticias':
+        # Quando clicar em "Notícias", aparece o sub-menu de notícias
+        noticias_keyboard = [
+            [
+                InlineKeyboardButton("Últimas Notícias", callback_data='ultimas_noticias'),
+                InlineKeyboardButton("Atualizações do CS2", callback_data='atualizacoes_cs2')
+            ],
+            [InlineKeyboardButton("Notícias da FURIA", callback_data='noticias_furia')],
+            [InlineKeyboardButton("🔙 Voltar", callback_data='voltar_menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(noticias_keyboard)
+        await query.edit_message_text(text="📰 Escolha uma categoria de notícias:", reply_markup=reply_markup)
 
-    await query.edit_message_text(
-    text=resposta.get(query.data, "Opção inválida."),
-    parse_mode="Markdown",
-    disable_web_page_preview=True
-)
+    elif query.data == 'ranking':
+        # Quando clicar em "Ranking", aparece o sub-menu de ranking
+        ranking_keyboard = [
+            [
+                InlineKeyboardButton("Ranking Mundial", callback_data='ranking_mundial'),
+                InlineKeyboardButton("Ranking Brasileiro", callback_data='ranking_brasileiro')
+            ],
+            [InlineKeyboardButton("Posição da FURIA", callback_data='posicao_furia')],
+            [InlineKeyboardButton("🔙 Voltar", callback_data='voltar_menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(ranking_keyboard)
+        await query.edit_message_text(text="🏆 Escolha o tipo de ranking:", reply_markup=reply_markup)
+
+    elif query.data == 'torneios':
+        # Quando clicar em "Torneios", aparece o sub-menu de torneios
+        torneios_keyboard = [
+            [
+                InlineKeyboardButton("Torneios Atuais", callback_data='torneios_atuais'),
+                InlineKeyboardButton("Próximos Torneios", callback_data='proximos_torneios')
+            ],
+            [InlineKeyboardButton("Resultados Recentes", callback_data='resultados_recentes')],
+            [InlineKeyboardButton("🔙 Voltar", callback_data='voltar_menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(torneios_keyboard)
+        await query.edit_message_text(text="🏅 Informações sobre os torneios:", reply_markup=reply_markup)
+
+    elif query.data == 'forum':
+        forum_text = (
+        "💬 Participe de comunidades de CS!\n\n"
+        "- Fórum Reddit CS:GO: [Acesse aqui](https://www.reddit.com/r/GlobalOffensive/)\n"
+        "- Discord Draft5: [Acesse aqui](https://discord.gg/draft5)"
+        )
+        forum_keyboard = [
+            [InlineKeyboardButton("🔙 Voltar", callback_data='voltar_menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(forum_keyboard)
+        await query.edit_message_text(
+            text=forum_text,
+            parse_mode="Markdown",
+            reply_markup=reply_markup,
+            disable_web_page_preview=True
+        )
+
+    elif query.data == 'contato':
+        contato_text = (
+        "💬 Entre em contato com a FURIA!\n\n"
+        "- WhatsApp: [Contato Inteligente FURIA](https://wa.me/5511993404466)\n"
+        "- Instagram: [Acesse aqui](https://www.instagram.com/furiagg)"
+        )
+        contato_keyboard = [
+            [InlineKeyboardButton("🔙 Voltar", callback_data='voltar_menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(contato_keyboard)
+        await query.edit_message_text(
+            text=contato_text,
+            parse_mode="Markdown",
+            reply_markup=reply_markup,
+            disable_web_page_preview=True
+        )
+
+    elif query.data == 'voltar_menu':
+        # Voltar para o menu principal
+        await mostrar_menu_principal(update, context)
+
+    else:
+        # Tratamento dos sub-menus (simples por enquanto)
+        resposta = {
+            'ultimas_noticias': "📰 Últimas notícias do CS: Novo patch lançado!",
+            'noticias_furia': "📰 Últimas da FURIA: Classificação para o próximo major confirmada!",
+            'atualizacoes_cs2': "🛠️ Atualizações CS2: Novo mapa 'Inferno' reformulado!",
+            'ranking_mundial': "🌎 Ranking Mundial: 1º - Vitality | 2º - G2 | 3º - FaZe",
+            'ranking_brasileiro': "🇧🇷 Ranking Brasileiro: 1º - FURIA | 2º - Imperial | 3º - MIBR",
+            'posicao_furia': "📈 A FURIA está atualmente na 9ª posição mundial!",
+            'torneios_atuais': "🏅 Torneios em andamento: ESL Pro League - Temporada 20",
+            'proximos_torneios': "🗓️ Próximos Torneios: Blast Premier Fall 2025",
+            'resultados_recentes': "✅ Resultados recentes: Vitória da FURIA contra a NAVI por 2-0"
+        }
+
+        await query.edit_message_text(
+            text=resposta.get(query.data, "Opção inválida."),
+            parse_mode="Markdown",
+            disable_web_page_preview=True
+        )
     
 
 async def sair(update: Update, context: ContextTypes.DEFAULT_TYPE):
