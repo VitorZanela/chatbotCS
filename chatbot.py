@@ -1,6 +1,7 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, filters, MessageHandler
 from dotenv import load_dotenv
+import requests
 import os
 
 load_dotenv()
@@ -81,12 +82,35 @@ def gerar_menu():
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+def buscar_ultimas_noticias():
+    api_key = "SUA_API_KEY_AQUI"  # Você pega uma chave grátis em newsapi.org
+    url = (
+        f"https://newsapi.org/v2/everything?"
+        "q=csgo&"         # Buscando por "csgo"
+        "language=pt&"    # Notícias em português
+        "sortBy=publishedAt&"
+        f"apiKey={api_key}"
+    )
+
+    resposta = requests.get(url)
+    if resposta.status_code == 200:
+        dados = resposta.json()
+        artigos = dados.get('articles', [])
+        noticias_texto = ""
+
+        for artigo in artigos[:5]:  # Mostrando as 5 primeiras notícias
+            titulo = artigo.get('title', 'Sem título')
+            url = artigo.get('url', '')
+            noticias_texto += f"• [{titulo}]({url})\n"
+
+        return noticias_texto if noticias_texto else "Nenhuma notícia encontrada."
+    else:
+        return "Erro ao buscar notícias. Tente novamente mais tarde."
+    
+async def handle_noticias(query):
 
     if query.data == 'noticias':
-        # Quando clicar em "Notícias", aparece o sub-menu de notícias
+
         noticias_keyboard = [
             [
                 InlineKeyboardButton("Últimas Notícias", callback_data='ultimas_noticias'),
@@ -96,7 +120,35 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🔙 Voltar", callback_data='voltar_menu')]
         ]
         reply_markup = InlineKeyboardMarkup(noticias_keyboard)
-        await query.edit_message_text(text="📰 Escolha uma categoria de notícias:", reply_markup=reply_markup)
+        await query.edit_message_text("📰 Escolha uma categoria de notícias:", reply_markup=reply_markup)
+
+    elif query.data == 'ultimas_noticias':
+        noticias = buscar_ultimas_noticias()
+        await query.edit_message_text(
+            text=f"📰 *Últimas notícias sobre CS:GO:*\n\n{noticias}",
+            parse_mode="Markdown",
+            disable_web_page_preview=True
+        )
+
+    elif query.data == 'atualizacoes_cs2':
+        await query.edit_message_text(
+            text="🛠️ Atualizações CS2: Novo mapa 'Inferno' reformulado!",
+            parse_mode="Markdown"
+        )
+
+    elif query.data == 'noticias_furia':
+        await query.edit_message_text(
+            text="🐺 Notícias da FURIA: Time classificado para o próximo major!",
+            parse_mode="Markdown"
+        )
+
+
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    if query.data.startswith('noticias'):
+        await handle_noticias(query)
 
     elif query.data == 'ranking':
         # Quando clicar em "Ranking", aparece o sub-menu de ranking
@@ -165,7 +217,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         # Tratamento dos sub-menus (simples por enquanto)
         resposta = {
-            'ultimas_noticias': "📰 Últimas notícias do CS: Novo patch lançado!",
+            'ultimas_noticias': buscar_ultimas_noticias(),
             'noticias_furia': "📰 Últimas da FURIA: Classificação para o próximo major confirmada!",
             'atualizacoes_cs2': "🛠️ Atualizações CS2: Novo mapa 'Inferno' reformulado!",
             'ranking_mundial': "🌎 Ranking Mundial: 1º - Vitality | 2º - G2 | 3º - FaZe",
