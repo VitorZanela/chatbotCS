@@ -1,12 +1,26 @@
-# ChatBotCS
-Chatbot criado para os apaixonados por CS, no qual é possivel ficar por dentro de todas as novidades no mundo CounterStrike.
+# ChatBotCS 🐺🎮
+Chatbot para fãs do time FURIA do CS:GO e CS2, trazendo notícias, rankings, torneios e informações.
 
 ## 🚀 Funcionalidades
-- Responde mensagens
+- 📋 Menu principal e submenus interativos.
+- 📰 Últimas notícias sobre o cenário CS:GO e sobre o time FURIA.
+- 🏆 Rankings Mundial e Brasileiro de equipes, e posição atual FURIA.
+- 🏅 Informações sobre torneios atuais e futuros.
+- 💬 Links para comunidades e fóruns de CS:GO.
+- 📈 Informações sobre a posição da FURIA no ranking.
+- 📲 Contato direto com a equipe FURIA.
+- ✅ Resposta automática para mensagens inválidas, redirecionando ao menu.
 
-## 📦 Tecnologias
-Projeto desenvolvido com:
-- Python 3.13.3
+## 🛠️ Comandos Disponíveis
+- `/start` – Inicia o bot e apresenta o menu principal.
+- `/restart` – Reinicia a conversa com o bot.
+- `/info` – Apresenta mais informações sobre o bot.
+- `/sair` – Finaliza a sessão de conversa.
+
+## 📦 Tecnologias Utilizadas
+- [Python 3.13.3](https://www.python.org/)
+- [python-telegram-bot](https://python-telegram-bot.org/) (v20+)
+- [python-dotenv](https://pypi.org/project/python-dotenv/)
 
 ## 🛠️ Como usar
 1. Clone este repositório:
