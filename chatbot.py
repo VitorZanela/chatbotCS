@@ -1,12 +1,25 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, filters, MessageHandler
 from dotenv import load_dotenv
+import aiohttp
+
 import os
+
+from yarl import Query
 
 load_dotenv()
 TOKEN = os.environ.get("TOKEN")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-async def mensagem_invalida(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def gerar_menu():
+    keyboard = [
+        ["📋 Menu Principal"],
+        ["♻️ Reiniciar", "ℹ️ Info sobre o Bot"],
+        ["🚪 Sair"]
+    ]
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+async def mensagem_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     if text == "📋 Menu Principal":
@@ -15,30 +28,31 @@ async def mensagem_invalida(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await sair(update, context)
     elif text == "♻️ Reiniciar":
         await start(update, context)
-    elif text == "ℹ️ Mais info sobre o Bot":
+    elif text == "ℹ️ Info sobre o Bot":
+        info_text = (
+        "ℹ️ *Informações sobre o Bot* ℹ️\n\n"
+        "Este bot fornece notícias, rankings, torneios e curiosidades sobre o time de CS:GO da FURIA! 🐺\n\n\n"
+        "_Criado e desenvolvido por Vitor Zanela_\n"
+        "*OBS:* _Todas as noticias sobre a FURIA e sobre o Time da FURIA são geradas por IA e são fictícias_"
+        )
+        info_keyboard = [
+            [InlineKeyboardButton("📋 Menu Principal", callback_data='voltar_menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(info_keyboard)
         await update.message.reply_text(
-            "ℹ️ *Informações sobre o Bot* ℹ️\n\n"
-            "Este bot fornece notícias, rankings, torneios e curiosidades sobre o time de CS:GO da FURIA! 🐺",
-            parse_mode="Markdown",
-            reply_markup=gerar_menu()
+        text=info_text,
+        parse_mode="Markdown",
+        reply_markup=reply_markup,
+        disable_web_page_preview=True
         )
     else:
         await update.message.reply_text(
             "🚫 *Mensagem não reconhecida!* 🚫\n\n"
-            "Não se preocupe 🙌\n "
+            "Não se preocupe 🙌\n"
             "Você será redirecionado para o *menu principal*.",
             parse_mode="Markdown"
         )
         await mostrar_menu_principal(update, context)
-
-async def set_menu(app):
-    commands = [
-        BotCommand(command="start", description="Iniciar o bot"),
-        BotCommand(command="restart", description="Reiniciar o bot"),
-        BotCommand(command="info", description="Mais informações sobre o bot"),
-        BotCommand(command="sair", description="Finalizar sessão com o bot"),
-    ]
-    await app.bot.set_my_commands(commands)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_first_name = update.effective_user.first_name
@@ -62,63 +76,53 @@ async def mostrar_menu_principal(update: Update, context: ContextTypes.DEFAULT_T
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    if update.message:  # Se for mensagem normal
+    if update.message:
         await update.message.reply_text(
             "Escolha uma opção no menu abaixo:",
             reply_markup=reply_markup
         )
-    elif update.callback_query:  # Se for botão (CallbackQuery)
+    elif update.callback_query:
         await update.callback_query.edit_message_text(
             "Escolha uma opção no menu abaixo:",
             reply_markup=reply_markup
         )
-
-def gerar_menu():
-    keyboard = [
-        ["📋 Menu Principal"],
-        ["♻️ Reiniciar", "🚪 Sair"],
-        ["ℹ️ Mais info sobre o Bot"]
-    ]
-    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
     if query.data == 'noticias':
-        # Quando clicar em "Notícias", aparece o sub-menu de notícias
+
         noticias_keyboard = [
             [
-                InlineKeyboardButton("Últimas Notícias", callback_data='ultimas_noticias'),
-                InlineKeyboardButton("Atualizações do CS2", callback_data='atualizacoes_cs2')
+                InlineKeyboardButton("Sobre a FURIA", callback_data='ultimas_noticias'),
+                InlineKeyboardButton("Time de CS da FURIA", callback_data='noticias_furia'),   
             ],
-            [InlineKeyboardButton("Notícias da FURIA", callback_data='noticias_furia')],
+            [InlineKeyboardButton("Atualizações do CS2", callback_data='atualizacoes_cs2')],
             [InlineKeyboardButton("🔙 Voltar", callback_data='voltar_menu')]
         ]
         reply_markup = InlineKeyboardMarkup(noticias_keyboard)
         await query.edit_message_text(text="📰 Escolha uma categoria de notícias:", reply_markup=reply_markup)
 
     elif query.data == 'ranking':
-        # Quando clicar em "Ranking", aparece o sub-menu de ranking
+
         ranking_keyboard = [
             [
                 InlineKeyboardButton("Ranking Mundial", callback_data='ranking_mundial'),
                 InlineKeyboardButton("Ranking Brasileiro", callback_data='ranking_brasileiro')
             ],
-            [InlineKeyboardButton("Posição da FURIA", callback_data='posicao_furia')],
             [InlineKeyboardButton("🔙 Voltar", callback_data='voltar_menu')]
         ]
         reply_markup = InlineKeyboardMarkup(ranking_keyboard)
         await query.edit_message_text(text="🏆 Escolha o tipo de ranking:", reply_markup=reply_markup)
 
     elif query.data == 'torneios':
-        # Quando clicar em "Torneios", aparece o sub-menu de torneios
+
         torneios_keyboard = [
             [
                 InlineKeyboardButton("Torneios Atuais", callback_data='torneios_atuais'),
-                InlineKeyboardButton("Próximos Torneios", callback_data='proximos_torneios')
+                InlineKeyboardButton("Resultados Recentes", callback_data='resultados_recentes')
             ],
-            [InlineKeyboardButton("Resultados Recentes", callback_data='resultados_recentes')],
             [InlineKeyboardButton("🔙 Voltar", callback_data='voltar_menu')]
         ]
         reply_markup = InlineKeyboardMarkup(torneios_keyboard)
@@ -159,40 +163,187 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     elif query.data == 'voltar_menu':
-        # Voltar para o menu principal
+
         await mostrar_menu_principal(update, context)
 
     else:
-        # Tratamento dos sub-menus (simples por enquanto)
-        resposta = {
-            'ultimas_noticias': "📰 Últimas notícias do CS: Novo patch lançado!",
-            'noticias_furia': "📰 Últimas da FURIA: Classificação para o próximo major confirmada!",
-            'atualizacoes_cs2': "🛠️ Atualizações CS2: Novo mapa 'Inferno' reformulado!",
-            'ranking_mundial': "🌎 Ranking Mundial: 1º - Vitality | 2º - G2 | 3º - FaZe",
-            'ranking_brasileiro': "🇧🇷 Ranking Brasileiro: 1º - FURIA | 2º - Imperial | 3º - MIBR",
-            'posicao_furia': "📈 A FURIA está atualmente na 9ª posição mundial!",
-            'torneios_atuais': "🏅 Torneios em andamento: ESL Pro League - Temporada 20",
-            'proximos_torneios': "🗓️ Próximos Torneios: Blast Premier Fall 2025",
-            'resultados_recentes': "✅ Resultados recentes: Vitória da FURIA contra a NAVI por 2-0"
-        }
+        voltar_keyboard = [
+        [InlineKeyboardButton("🔙 Voltar para Noticias", callback_data='noticias')]
+    ]
+    reply_markup = InlineKeyboardMarkup(voltar_keyboard)
+
+    if query.data in ['ultimas_noticias', 'noticias_furia']:
 
         await query.edit_message_text(
-            text=resposta.get(query.data, "Opção inválida."),
-            parse_mode="Markdown",
-            disable_web_page_preview=True
+            text="🔄 Buscando notícias... aguarde!",
+            parse_mode="Markdown"
         )
-    
+
+        if query.data == 'ultimas_noticias':
+            texto = await buscar_noticias_gemini("Últimas notícias da FURIA E-sports")
+        else:
+            texto = await buscar_noticias_gemini("Últimas notícias do time de CS da FURIA")
+
+        await query.edit_message_text(
+            text=texto,
+            parse_mode="Markdown",
+            disable_web_page_preview=True,
+            reply_markup=reply_markup
+        )
+
+    else:
+        if query.data == 'atualizacoes_cs2':
+            voltar_keyboard = [
+                [InlineKeyboardButton("🔙 Voltar para Notícias", callback_data='noticias')]
+            ]
+            reply_markup = InlineKeyboardMarkup(voltar_keyboard)
+
+            texto = "🛠️ Atualizações no CS2\n\n" \
+                    "• Atualizações disponíveis: [Acesse aqui](https://draft5.gg/cs-atualizacoes)\n"
+            
+        elif query.data == 'ranking_mundial':
+            voltar_keyboard = [
+                [InlineKeyboardButton("🔙 Voltar para Ranking", callback_data='ranking')]
+            ]
+            reply_markup = InlineKeyboardMarkup(voltar_keyboard)
+            texto = (
+                    "🌎 Ranking Mundial - CS2\n\n" 
+                    "• Veja o ranking mundial atualizado do dia *21/04/2025*: [Clique aqui para conferir](https://www.hltv.org/ranking/teams/2025/april/21)\n" 
+                    "• Até esssa atualização a equipe do FURIA esta na 16ª Posição\n\n" 
+                    "💬 Dica:\n" 
+                    "• Dá pra mudar o idioma do site para *português!*\n" 
+                    "• Também é possível filtrar para ver rankings de outras datas!"
+                )
+            
+        elif query.data == 'ranking_brasileiro':
+            voltar_keyboard = [
+                [InlineKeyboardButton("🔙 Voltar para Ranking", callback_data='ranking')]
+            ]
+            reply_markup = InlineKeyboardMarkup(voltar_keyboard)
+            texto = (
+                    "🌎 Ranking Mundial - CS2\n\n" 
+                    "• Veja o ranking Brasileiro atualizado do dia *21/04/2025*: [Clique aqui para conferir](https://www.hltv.org/ranking/teams/2025/april/21/country/Brazil)\n" 
+                    "• Até esssa atualização a equipe do FURIA esta na 1ª Posição\n\n" 
+                    "💬 Dica:\n" 
+                    "• Dá pra mudar o idioma do site para *português!*\n" 
+                    "• Também é possível filtrar para ver rankings de outras datas!"
+                )
+        elif query.data == 'torneios_atuais':
+            voltar_keyboard = [
+                [InlineKeyboardButton("🔙 Voltar para Torneios", callback_data='torneios')]
+            ]
+            reply_markup = InlineKeyboardMarkup(voltar_keyboard)
+            texto = (
+                    "🏆 *Torneios Recentes e Atuais da FURIA*\n\n"
+                    "- Confira os campeonatos em que a FURIA está participando e os resultados mais recentes! 🔥\n\n"
+                    "👉 [Clique aqui para acessar](https://draft5.gg/equipe/330-FURIA/campeonatos)"
+                )
+        elif query.data == 'resultados_recentes':
+            voltar_keyboard = [
+                [InlineKeyboardButton("🔙 Voltar para Torneios", callback_data='torneios')]
+            ]
+            reply_markup = InlineKeyboardMarkup(voltar_keyboard)
+            texto = (
+                    "✅ *Últimos Resultados da FURIA*\n\n"
+                    "- Veja os placares e confrontos mais recentes do time! 🐺🔥\n\n"
+                    "👉 [Clique aqui para acessar](https://draft5.gg/equipe/330-FURIA/resultados)"
+                )
+        else:
+            texto = "⚠️ Opção inválida."
+
+        await query.edit_message_text(
+            text=texto,
+            parse_mode="Markdown",
+            disable_web_page_preview=True,
+            reply_markup=reply_markup
+        )
+
+
+async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    info_text = (
+        "ℹ️ *Informações sobre o Bot* ℹ️\n\n"
+        "Este bot fornece notícias, rankings, torneios e curiosidades sobre o time de CS:GO da FURIA! 🐺\n\n\n"
+        "_Criado e desenvolvido por Vitor Zanela_\n"
+        "*OBS:* _Informações de noticias ficcticia_"
+    )
+    info_keyboard = [
+        [InlineKeyboardButton("📋 Menu Principal", callback_data='voltar_menu')]
+    ]
+    reply_markup = InlineKeyboardMarkup(info_keyboard)
+    await update.message.reply_text(
+        text=info_text,
+        parse_mode="Markdown",
+        reply_markup=reply_markup,
+        disable_web_page_preview=True
+    )
+
+async def buscar_noticias_gemini(tema):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+
+    headers = {
+        "Content-Type": "application/json",
+    }
+
+    body = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": f"""
+                        Você é um assistente especializado em notícias de eSports, focado em Counter-Strike (CS2) e no time FURIA.
+
+                        - Gere as 3 notícias mais recentes sobre o tema '{tema}'.
+                        - Cada notícia deve ter:
+                            • Um título impactante (no estilo de portais como HLTV.org, Draft5.gg).
+                            • Um link fictício para simular a notícia (exemplo: https://noticiascs.com/furia-titulo).
+                        - As notícias devem ser em português (Brasil).
+                        - Caso não existam notícias reais, crie manchetes plausíveis e realistas.
+                        - Não repita temas entre as notícias.
+                        - Não inclua mensagens auxiliares nem explicações extras.
+
+                        Responda no seguinte formato:
+                        📰 *Título da notícia*
+                        [Leia mais aqui](link)
+
+                        Separe cada notícia com uma linha em branco.
+                        """
+                    }
+                ]
+            }
+        ]
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, json=body) as response:
+            if response.status != 200:
+                return "⚠️ Erro ao buscar notícias. Tente novamente mais tarde."
+            try:
+                resposta = await response.json()
+                texto = resposta["candidates"][0]["content"]["parts"][0]["text"]
+                return texto
+            except Exception as e:
+                return "⚠️ Não consegui interpretar as notícias. Tente novamente."
+
+async def set_menu(app):
+    commands = [
+        BotCommand(command="start", description="Iniciar o bot"),
+        BotCommand(command="restart", description="Reiniciar o bot"),
+        BotCommand(command="info", description="Mais informações sobre o bot"),
+        BotCommand(command="sair", description="Finalizar sessão com o bot"),
+    ]
+    await app.bot.set_my_commands(commands)
 
 async def sair(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-    "Sessão encerrada! 👋",
-    reply_markup=gerar_menu()
-)
+        "Sessão encerrada! 👋",
+        reply_markup=gerar_menu()
+    )
 
 
 app = Application.builder().token(TOKEN).post_init(set_menu).build()
 app.add_handler(CommandHandler(["start", "restart"], start))
+app.add_handler(CommandHandler("info", info))
 app.add_handler(CommandHandler("sair", sair))
 app.add_handler(CallbackQueryHandler(button))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, mensagem_invalida))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, mensagem_menu))
 app.run_polling()
