@@ -2,6 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotComm
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, filters, MessageHandler
 from dotenv import load_dotenv
 import aiohttp
+
 import os
 
 from yarl import Query
@@ -32,7 +33,7 @@ async def mensagem_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "ℹ️ *Informações sobre o Bot* ℹ️\n\n"
         "Este bot fornece notícias, rankings, torneios e curiosidades sobre o time de CS:GO da FURIA! 🐺\n\n\n"
         "_Criado e desenvolvido por Vitor Zanela_\n"
-        "*OBS:* _Todas as noticias são geradas por IA e são fictícias_"
+        "*OBS:* _Todas as noticias sobre a FURIA e sobre o Time da FURIA são geradas por IA e são fictícias_"
         )
         info_keyboard = [
             [InlineKeyboardButton("📋 Menu Principal", callback_data='voltar_menu')]
